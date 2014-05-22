@@ -32,3 +32,112 @@ import subprocess
 # this should happen every time the script exits
 # need signal handler
 #  cleanup on all signals
+
+#### some useful code snippets
+'''
+>>> output = subprocess.Popen(['/usr/bin/yum', '--disablerepo=*', '--enablerepo=fnal-mps', 'list', 'available', 'wh6*'], stdout=subprocess.PIPE).communicate()[0]
+>>> print output
+Loaded plugins: downloadonly, fastestmirror, kabi, list-data, local, priorities,
+: protectbase, refresh-packagekit, rpm-warm-cache, security,
+: verify, versionlock
+Loading support for Red Hat kernel ABI
+Loading mirror speeds from cached hostfile
+0 packages excluded due to repository protections
+Available Packages
+wh6e-dell2150.noarch 1-1 fnal-mps
+wh6w-hp3530.noarch 1-1 fnal-mps
+wh6w-hp775.noarch 1-1 fnal-mps
+
+
+>>> output = subprocess.Popen(['/usr/bin/yum', '--quiet', 'check-update'], stdout=subprocess.PIPE).communicate()[0]
+>>> print output
+
+mysql55-mysql.x86_64 5.5.37-1.2.el6 softwarecollections
+mysql55-mysql-bench.x86_64 5.5.37-1.2.el6 softwarecollections
+mysql55-mysql-devel.x86_64 5.5.37-1.2.el6 softwarecollections
+mysql55-mysql-libs.x86_64 5.5.37-1.2.el6 softwarecollections
+mysql55-mysql-server.x86_64 5.5.37-1.2.el6 softwarecollections
+mysql55-mysql-test.x86_64 5.5.37-1.2.el6 softwarecollections
+xorg-x11-drv-wacom.x86_64 0.16.1-4.el6 _local
+
+
+Do not love the asymmetry and absolute behavior of the --quiet switch.
+
+[root@dethklok ~]# yum --quiet check-update
+
+mysql55-mysql.x86_64 5.5.37-1.2.el6 softwarecollections
+mysql55-mysql-bench.x86_64 5.5.37-1.2.el6 softwarecollections
+mysql55-mysql-devel.x86_64 5.5.37-1.2.el6 softwarecollections
+mysql55-mysql-libs.x86_64 5.5.37-1.2.el6 softwarecollections
+mysql55-mysql-server.x86_64 5.5.37-1.2.el6 softwarecollections
+mysql55-mysql-test.x86_64 5.5.37-1.2.el6 softwarecollections
+xorg-x11-drv-wacom.x86_64 0.16.1-4.el6 _local
+[root@dethklok ~]# yum --quiet update
+
+====================================================================================================
+Package Arch Version Repository Size
+====================================================================================================
+Updating:
+mysql55-mysql x86_64 5.5.37-1.2.el6 softwarecollections 5.9 M
+mysql55-mysql-bench x86_64 5.5.37-1.2.el6 softwarecollections 431 k
+mysql55-mysql-devel x86_64 5.5.37-1.2.el6 softwarecollections 177 k
+mysql55-mysql-libs x86_64 5.5.37-1.2.el6 softwarecollections 217 k
+mysql55-mysql-server x86_64 5.5.37-1.2.el6 softwarecollections 10 M
+mysql55-mysql-test x86_64 5.5.37-1.2.el6 softwarecollections 6.9 M
+xorg-x11-drv-wacom x86_64 0.16.1-4.el6 _local 236 k
+
+Transaction Summary
+====================================================================================================
+Upgrade 7 Package(s)
+
+Is this ok [y/N]: n
+Exiting on user Command
+[root@dethklok ~]# yum --quiet --assumeyes update
+[root@dethklok ~]# yum --quiet check-update
+[root@dethklok ~]# yum --quiet --assumeyes downgrade xorg-x11-drv-wacom
+[root@dethklok ~]# yum --quiet check-update
+
+xorg-x11-drv-wacom.x86_64 0.16.1-4.el6 _local
+[root@dethklok ~]# yum --assumeyes update
+Loaded plugins: downloadonly, fastestmirror, kabi, list-data, local, priorities, protectbase,
+: refresh-packagekit, rpm-warm-cache, security, verify, versionlock
+Loading support for Red Hat kernel ABI
+Loading mirror speeds from cached hostfile
+* softwarecollections: ftp2.scientificlinux.org
+2 packages excluded due to repository priority protections
+0 packages excluded due to repository protections
+Setting up Update Process
+Resolving Dependencies
+--> Running transaction check
+---> Package xorg-x11-drv-wacom.x86_64 0:0.16.1-3.el6 will be updated
+---> Package xorg-x11-drv-wacom.x86_64 0:0.16.1-4.el6 will be an update
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+====================================================================================================
+Package Arch Version Repository Size
+====================================================================================================
+Updating:
+xorg-x11-drv-wacom x86_64 0.16.1-4.el6 _local 236 k
+
+Transaction Summary
+====================================================================================================
+Upgrade 1 Package(s)
+
+Total download size: 236 k
+Downloading Packages:
+Running rpm_check_debug
+Running Transaction Test
+Transaction Test Succeeded
+Running Transaction
+Updating : xorg-x11-drv-wacom-0.16.1-4.el6.x86_64 1/2
+Cleanup : xorg-x11-drv-wacom-0.16.1-3.el6.x86_64 2/2
+Verifying : xorg-x11-drv-wacom-0.16.1-4.el6.x86_64 1/2
+Verifying : xorg-x11-drv-wacom-0.16.1-3.el6.x86_64 2/2
+
+Updated:
+xorg-x11-drv-wacom.x86_64 0:0.16.1-4.el6
+
+Complete!
+'''
