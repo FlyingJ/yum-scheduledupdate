@@ -1,0 +1,34 @@
+import ConfigParser
+import logging
+import optparse
+import subprocess
+
+# check for presence of /etc/noyumupdate
+# exit, if present
+
+# read command line options
+# -c check-only and notify of pending package updates
+# -u update and notify of updated packages
+# -f alternate configuration file (default: /etc/sysconfig/yum-scheduledupdate)
+
+# read configuration file
+# default to /etc/sysconfig/yum-scheduledupdate
+# override with -f command line argument
+# MAILLIST
+# MAXWAITTIME
+# CONFIGFILE
+# EXCLUDE
+# DEBUG
+
+# construct and run yum command
+# check-update with -c command line switch
+# update with -u command line switch
+# save output
+
+# use yum output to construct body of notification email
+# send notification email to email list (MAILLIST)
+
+# remove /etc/noyumupdate
+# this should happen every time the script exits
+# need signal handler
+#  cleanup on all signals
