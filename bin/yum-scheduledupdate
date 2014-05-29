@@ -8,29 +8,47 @@ import signal
 import subprocess
 import sys
 
+def clean_lock():
+  # remove /etc/noyumupdate
+  if options.debug:
+    print "Now, in function to remove /etc/noyumupdate."
+
+# read command line options
+# --debug give debug output
+# --dry-run print what you are going to do, but do nothing
+# -c check-only and notify of pending package updates (default)
+# -u update and notify of updated packages (override default)
+# -f alternate configuration file (default: /etc/sysconfig/yum-scheduledupdate)
+parser = optparse.OptionParser()
+parser.set_defaults(debug = False,
+                    dry_run = False,
+                    no_update = True,
+                    config_file = "/etc/sysconfig/yum-scheduledupdate")
+parser.add_option("--debug", action="store_true", dest="debug")
+parser.add_option("--dry-run", action="store_true", dest="dry_run")
+parser.add_option("-c", "--check-updates", action="store_true", dest="no_update")
+parser.add_option("-u", "--update", action="store_false", dest="no_update")
+parser.add_option("-f", "--config-file", action="store", dest="config_file")
+
+(options, args) = parser.parse_args()
+
 # 
 # check for presence of /etc/noyumupdate
 # exit, if present
 if os.path.exists('/etc/noyumupdate'):
   # log a message
   #logging.warning('Found /etc/noyumupdate. Skipping update run!')
-  print 'Found /etc/noyumupdate. Skipping update run!'
+  if options.debug:
+    print 'Found /etc/noyumupdate. Skipping update run!'
+  if options.debug:
+    print "Remove /etc/noyumupdate so we function properly next time."
+  clean_lock()
   exit()
 
-# read command line options
-# -c check-only and notify of pending package updates (default)
-# -u update and notify of updated packages (override default)
-# -f alternate configuration file (default: /etc/sysconfig/yum-scheduledupdate)
-parser = optparse.OptionParser()
-parser.set_defaults(dry_run = True,
-                    config_file = "/etc/sysconfig/yum-scheduledupdate")
-parser.add_option("-c", "--check-updates", action="store_true", dest="dry_run")
-parser.add_option("-u", "--update", action="store_false", dest="dry_run")
-parser.add_option("-f", "--config-file", action="store", dest="config_file")
-
-(options, args) = parser.parse_args()
-
-print options.dry_run
+if options.debug:
+  print "Printing debug output."
+else:
+  print "Not printing debug output. Seriously. No, really!"
 
 if options.dry_run:
   print "Not doing anything"
@@ -46,18 +64,46 @@ else:
 # EXCLUDE
 # DEBUG
 
+if options.debug:
+  print "Using configuration file: %s" % (options.config_file)
+
+if options.debug:
+  print "Now is the time I would be reading said configuration file."
+
+if options.debug:
+  print "This is the part where I would build a list of excluded packages needed in the next part."
+
 # construct and run yum command
 # check-update with -c command line switch
 # update with -u command line switch
 # save output
+command = ['/usr/bin/yum',]
+if options.debug:
+  print "Base command: %s" % (command)
+if options.no_update:
+  command.append('--quiet')
+  command.append('check-update')
+else:
+  command.append('--assumeyes')
+  command.append('update')
+
+if options.debug:
+  print "Final command list: %s" % (command)
 
 # use yum output to construct body of notification email
 # send notification email to email list (MAILLIST)
+
+if options.debug:
+  print "Now, send an email letting MAILLIST know what has transpired."
 
 # remove /etc/noyumupdate
 # this should happen every time the script exits
 # need signal handler
 #  cleanup on all signals
+
+if options.debug:
+  print "Remove /etc/noyumupdate so we function properly next time."
+clean_lock()
 
 #### some useful code snippets
 '''
