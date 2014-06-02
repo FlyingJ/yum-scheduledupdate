@@ -61,30 +61,44 @@ if os.path.exists('/etc/noyumupdate'):
 if options.debug:
   print "[DEBUG] Printing debug output."
 else:
-  print "Not printing debug output. Seriously. No, really!"
+  print "[NODEBUG] Not printing debug output. Seriously. No, really!"
 
 if options.dry_run:
-  print "Not doing anything"
+  print "[DRYRUN] Not doing anything"
 else:
-  print "Doing stuff"
+  print "[LIVE] Doing stuff"
 
 # read configuration file
 # default to /etc/sysconfig/yum-scheduledupdate
 # override with -f command line argument
-# MAILLIST
-# MAXWAITTIME
-# CONFIGFILE
-# EXCLUDE
-# DEBUG
-
 if options.debug:
   print "[DEBUG] Using configuration file: %s" % (options.config_file)
 
 if options.debug:
   print "[DEBUG] Now is the time I would be reading said configuration file."
 
+if not os.path.exists(options.config_file):
+  message = 'Configuration file %s not found.' % (options.config_file)
+  raise Exception(message)
+
+config = ConfigParser.ConfigParser()
+config.read(options.config_file)
+email_list = None
+yum_config = None
+yum_exclude = None
+
+# MAILLIST
+## MAXWAITTIME
+# CONFIGFILE
+# EXCLUDE
+email_list = config.get('main', 'MAILLIST')
+yum_config = config.get('main', 'CONFIGFILE')
+yum_exclude = config.get('main', 'EXCLUDE')
+
 if options.debug:
-  print "[DEBUG] This is the part where I would build a list of excluded packages needed in the next part."
+  print "[DEBUG] email_list: %s" % (email_list)
+  print "[DEBUG] yum_config: %s" % (yum_config)
+  print "[DEBUG] yum_exclude: %s" % (yum_exclude)
 
 # construct and run yum command
 # check-update with -c command line switch
@@ -93,6 +107,17 @@ if options.debug:
 command = ['/usr/bin/yum',]
 if options.debug:
   print "[DEBUG] Base command: %s" % (command)
+
+# add some global yum opts if configured above
+if yum_config:
+  yum_config_arg = "--config=%s" % (yum_config)
+  command.append(yum_config_arg)
+# need an exclude argument for each glob
+if yum_exclude:
+  for exclude in yum_exclude.split(' '):
+    yum_exclude_arg = "--exclude=%s" % (exclude)
+    command.append(yum_exclude_arg)
+
 if options.no_update:
   command.append('--quiet')
   command.append('check-update')
@@ -103,35 +128,38 @@ else:
 if options.debug:
   print "[DEBUG] Final command list: %s" % (command)
 
-if options.debug:
-  print "[DEBUG] Running the command..."
-# run the command, collecting the output
-command_output = subprocess.Popen(command, stdout=subprocess.PIPE).communicate()[0]
-if options.debug:
-  print "[DEBUG] Command output:"
-  print command_output
+if not options.dry_run:
+  if options.debug:
+    print "[DEBUG] Running the command..."
+  # run the command, collecting the output
+  command_output = subprocess.Popen(command, stdout=subprocess.PIPE).communicate()[0]
+  if options.debug:
+    print "[DEBUG] Command output:"
+    print command_output
 
-# use yum output to construct body of notification email
-if options.debug:
-  print "[DEBUG] Constructing body of the notification email..."
-notification_body = create_body(options.no_update, command_output)
+  # use yum output to construct body of notification email
+  if options.debug:
+    print "[DEBUG] Constructing body of the notification email..."
+  notification_body = create_body(options.no_update, command_output)
 
-if options.debug:
-  print "[DEBUG] This is the body of the notification email:"
-  print notification_body
+  if options.debug:
+    print "[DEBUG] This is the body of the notification email:"
+    print notification_body
 
-# send notification email to email list (MAILLIST)
-if options.debug:
-  print "[DEBUG] Now, send an email letting MAILLIST know what has transpired."
+  # send notification email to email list (MAILLIST)
+  if options.debug:
+    print "[DEBUG] Now, send an email letting MAILLIST know what has transpired."
 
-# remove /etc/noyumupdate
-# this should happen every time the script exits
-# need signal handler
-#  cleanup on all signals
+  # remove /etc/noyumupdate
+  # this should happen every time the script exits
+  # need signal handler
+  #  cleanup on all signals
 
-if options.debug:
-  print "[DEBUG] Remove /etc/noyumupdate so we function properly next time."
-clean_lock()
+  if options.debug:
+    print "[DEBUG] Remove /etc/noyumupdate so we function properly next time."
+  clean_lock()
+else:
+  print "[DRYRUN] Not doing anything"
 
 #### some useful code snippets
 '''
