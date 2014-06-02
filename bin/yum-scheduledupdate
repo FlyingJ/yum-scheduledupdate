@@ -11,7 +11,20 @@ import sys
 def clean_lock():
   # remove /etc/noyumupdate
   if options.debug:
-    print "Now, in function to remove /etc/noyumupdate."
+    print "[DEBUG] Now, in function to remove /etc/noyumupdate."
+
+def create_body(no_update, command_output):
+  # generate header,footer for pending updates
+  if no_update:
+    notification_header = "Updates to be applied:\n"
+    notification_footer = "Open a ServiceDesk ticket to avoid having updates applied."
+  # generate header,footer for applied updates
+  else:
+    notification_header = "Updates applied:\n"
+    notification_footer = "Open a ServiceDesk ticket to report any errant behavior caused by the updates."
+
+  notification_body = "%s\n%s\n%s" % (notification_header, command_output, notification_footer)
+  return notification_body
 
 # read command line options
 # --debug give debug output
@@ -39,14 +52,14 @@ if os.path.exists('/etc/noyumupdate'):
   # log a message
   #logging.warning('Found /etc/noyumupdate. Skipping update run!')
   if options.debug:
-    print 'Found /etc/noyumupdate. Skipping update run!'
+    print '[DEBUG] Found /etc/noyumupdate. Skipping update run!'
   if options.debug:
-    print "Remove /etc/noyumupdate so we function properly next time."
+    print "[DEBUG] Remove /etc/noyumupdate so we function properly next time."
   clean_lock()
   exit()
 
 if options.debug:
-  print "Printing debug output."
+  print "[DEBUG] Printing debug output."
 else:
   print "Not printing debug output. Seriously. No, really!"
 
@@ -65,13 +78,13 @@ else:
 # DEBUG
 
 if options.debug:
-  print "Using configuration file: %s" % (options.config_file)
+  print "[DEBUG] Using configuration file: %s" % (options.config_file)
 
 if options.debug:
-  print "Now is the time I would be reading said configuration file."
+  print "[DEBUG] Now is the time I would be reading said configuration file."
 
 if options.debug:
-  print "This is the part where I would build a list of excluded packages needed in the next part."
+  print "[DEBUG] This is the part where I would build a list of excluded packages needed in the next part."
 
 # construct and run yum command
 # check-update with -c command line switch
@@ -79,7 +92,7 @@ if options.debug:
 # save output
 command = ['/usr/bin/yum',]
 if options.debug:
-  print "Base command: %s" % (command)
+  print "[DEBUG] Base command: %s" % (command)
 if options.no_update:
   command.append('--quiet')
   command.append('check-update')
@@ -88,13 +101,28 @@ else:
   command.append('update')
 
 if options.debug:
-  print "Final command list: %s" % (command)
-
-# use yum output to construct body of notification email
-# send notification email to email list (MAILLIST)
+  print "[DEBUG] Final command list: %s" % (command)
 
 if options.debug:
-  print "Now, send an email letting MAILLIST know what has transpired."
+  print "[DEBUG] Running the command..."
+# run the command, collecting the output
+command_output = subprocess.Popen(command, stdout=subprocess.PIPE).communicate()[0]
+if options.debug:
+  print "[DEBUG] Command output:"
+  print command_output
+
+# use yum output to construct body of notification email
+if options.debug:
+  print "[DEBUG] Constructing body of the notification email..."
+notification_body = create_body(options.no_update, command_output)
+
+if options.debug:
+  print "[DEBUG] This is the body of the notification email:"
+  print notification_body
+
+# send notification email to email list (MAILLIST)
+if options.debug:
+  print "[DEBUG] Now, send an email letting MAILLIST know what has transpired."
 
 # remove /etc/noyumupdate
 # this should happen every time the script exits
@@ -102,7 +130,7 @@ if options.debug:
 #  cleanup on all signals
 
 if options.debug:
-  print "Remove /etc/noyumupdate so we function properly next time."
+  print "[DEBUG] Remove /etc/noyumupdate so we function properly next time."
 clean_lock()
 
 #### some useful code snippets
