@@ -2,7 +2,7 @@
 # MAILLIST
 #   This is a comma deliminated list
 #   Example:  MAILLIST=root,me@mydomain.com,you@yourdomain.org
-MAILLIST=root
+MAILLIST=root,jason@fnal.gov
 
 # MAXWAITTIME
 #   yum-autoupdate waits for a random time before starting
