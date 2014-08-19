@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# Author : ManuxFR
+# Name : yum-checkupdate
+# Features : yum-checkupdate checks for available package updates and sends an email
+# Version : 0.1
+#
+# Based on ManuxFR's script which is based on Michael Heiming's script.
+#
+# Tips : Put this script in /etc/cron.weekly/ or /etc/cron.daily/!
+## CONFIGURATION
+# Mail dest :
+MAILLIST=jason@fnal.gov
+# Mode debug - e-mail even no news paquets.
+# "yes" or "no"
+DEBUG="no"
+## DON'T MODIFY ! (EXCEPT IF YOU KNOW WHAT YOU DO)
+################################################################################
+yumdat="/tmp/yum-check-update.$$"
+yumb="/usr/bin/yum"
+# wait a random interval if there is not a controlling terminal,
+# for load management
+if ! [ -t ]
+then
+  num=$RANDOM
+  let "num %= ${RANGE:=1}"
+  sleep $num
+fi
+
+rm -f ${yumdat%%[0-9]*}*
+
+$yumb check-update >& $yumdat
+yumstatus="$?"
+
+case $yumstatus in
+  100)
+    cat $yumdat |\
+    mail -r "yum-alert" -s "Server : ${HOSTNAME} --> Package updates Pending!" $MAILLIST
+    exit 0
+  ;;
+  0)
+    if [ $DEBUG = "yes" ];then
+    cat $yumdat |\
+    mail -r "yum-alert" -s "Server : ${HOSTNAME} --> No package updates found." $MAILLIST
+    fi
+    exit 0
+  ;;
+  *)
+    # Status of yum error
+    (echo "Alert 'yum check-update': ${yumstatus}" && \
+    [ -e "${yumdat}" ] && cat "${yumdat}" )|\
+    mail -r "yum-alert" -s "Alert : ${HOSTNAME} --> Problem with yum." $MAILLIST
+  esac
+
+[ -e "${yumdat}" ] && rm ${yumdat}
